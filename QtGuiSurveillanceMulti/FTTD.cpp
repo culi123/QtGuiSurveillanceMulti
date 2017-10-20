@@ -358,6 +358,7 @@ void CFTTD::GetCurrentPosition1()
 			key.Direction = direction;
 			if (Display[g_AccountInfo.AccountName].position1.find(key) != Display[g_AccountInfo.AccountName].position1.end())
 			{
+				//汇总的持仓信息中已存在该合约的信息，则合并计算
 				int Multiple = ((CFTMD*)g_pMdHandler)->GetMultiple(key.ID);
 				double LastPrice = ((CFTMD*)g_pMdHandler)->GetLastPrice(key.ID);
 				double T1Close = ((CFTMD*)g_pMdHandler)->GetTClose(key.ID);
@@ -376,6 +377,13 @@ void CFTTD::GetCurrentPosition1()
 					{
 						Display[g_AccountInfo.AccountName].position1[key].CostClose = 0;
 						Display[g_AccountInfo.AccountName].position1[key].CostSettle = 0;
+						//输出Debug日志
+						nowtime = time(NULL); //获取日历时间
+						localtime_s(&local, &nowtime);  //获取当前系统时间
+						char filepre_tm[18];
+						strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
+						pLog->printLog("(%s) (%s)\n %s 持仓成本为0，;\n", g_AccountInfo.AccountName.c_str(), filepre_tm, key.ID.c_str());
+
 					}
 					else
 					{
@@ -420,7 +428,7 @@ void CFTTD::GetCurrentPosition1()
 			}
 			else
 			{
-
+				//汇总的持仓信息中尚未存在该合约的信息，则插入
 				int Multiple = ((CFTMD*)g_pMdHandler)->GetMultiple(key.ID);
 				double LastPrice = ((CFTMD*)g_pMdHandler)->GetLastPrice(key.ID);
 				double T1Close = ((CFTMD*)g_pMdHandler)->GetTClose(key.ID);
@@ -437,6 +445,7 @@ void CFTTD::GetCurrentPosition1()
 				{
 					Display[g_AccountInfo.AccountName].position1[key].CostClose = T1Close;
 					Display[g_AccountInfo.AccountName].position1[key].CostSettle = T1Settle;
+				
 				}
 				Display[g_AccountInfo.AccountName].position1[key].NumPosition = it->Position*num_direction;
 				Display[g_AccountInfo.AccountName].position1[key].YesNumPosition = (it->Position - it->TodayPosition)*num_direction;
@@ -454,7 +463,15 @@ void CFTTD::GetCurrentPosition1()
 				Display[g_AccountInfo.AccountName].position1[key].PctSettle = Display[g_AccountInfo.AccountName].position1[key].LastPrice / Display[g_AccountInfo.AccountName].position1[key].T1Settle - 1;
 				
 				if (Display[g_AccountInfo.AccountName].position1[key].CostClose < 1)
+				{
 					Display[g_AccountInfo.AccountName].position1[key].HoldingPnlClose = 0;
+					//输出Debug日志
+					nowtime = time(NULL); //获取日历时间
+					localtime_s(&local, &nowtime);  //获取当前系统时间
+					char filepre_tm[18];
+					strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
+					pLog->printLog("(%s) (%s)\n %s的持仓成本为T-1Close，该值为%f，;\n", g_AccountInfo.AccountName.c_str(), filepre_tm, key.ID.c_str(), T1Close);
+				}
 				else
 					Display[g_AccountInfo.AccountName].position1[key].HoldingPnlClose = (Display[g_AccountInfo.AccountName].position1[key].LastPrice - Display[g_AccountInfo.AccountName].position1[key].CostClose)*Display[g_AccountInfo.AccountName].position1[key].Multiplie*Display[g_AccountInfo.AccountName].position1[key].NumPosition;
 				

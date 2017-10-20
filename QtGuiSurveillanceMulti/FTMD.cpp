@@ -97,6 +97,11 @@ void CFTMD::initSubMD()
 {
     //根据合约列表订阅行情
 	int n_count = g_pTdHandler->Instruments.size();
+	if (n_count == 0)
+	{
+		//MD登录发出订阅请求前，可能TD类的Instrument尚未获取，因此稍等一下再进行获取ID的操作
+		Sleep(5000);
+	}
 	char ** codes = new char*[n_count];
 	TThostFtdcInstrumentIDType* InstrumentIDs = new TThostFtdcInstrumentIDType[n_count];
 	int i = 0;
@@ -108,6 +113,12 @@ void CFTMD::initSubMD()
 	}
 	m_pMdApi->SubscribeMarketData(codes, n_count);
 
+	//输出Debug日志
+	nowtime = time(NULL); //获取日历时间
+	localtime_s(&local, &nowtime);  //获取当前系统时间
+	char filepre_tm[18];
+	strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
+	pLog->printLog("(%s) (%s)\n 订阅合约数量为 %d\n", g_AccountInfo.AccountName.c_str(), filepre_tm, n_count);
 	delete[] codes;
 	delete[] InstrumentIDs;
 }
@@ -115,7 +126,15 @@ void CFTMD::initSubMD()
 void CFTMD::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	if (bIsLast)
+	{
 		SetEvent(hEvent);
+		nowtime = time(NULL); //获取日历时间
+		localtime_s(&local, &nowtime);  //获取当前系统时间
+		char filepre_tm[18];
+		strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
+		Display[g_AccountInfo.AccountName].log.push_back(string(filepre_tm) + string(":MarketData Subscribed successfully!!!"));
+	}
+		
 }
 void CFTMD::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData) 
 {

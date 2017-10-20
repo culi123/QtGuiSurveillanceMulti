@@ -25,7 +25,7 @@ public:
 
     void Init(AccountInfo account_info, CFTTD* pTdHandler);
 	void initSubMD();
-	void OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+	
 	double GetLastPrice(std::string code);
 	double GetVolume(std::string code);
 	double GetTClose(std::string code);
@@ -50,6 +50,8 @@ public:
 	void OnFrontDisconnected(int nReason);
 	///深度行情通知
 	void OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData);
+
+	void OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 	//退订行情通知
 	void OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 	//登出通知
