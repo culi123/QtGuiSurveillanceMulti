@@ -159,8 +159,10 @@ void CFTMD::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketDat
 				char filepre_tm[18];
 				strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
 				if (local.tm_hour <= 15 && local.tm_hour >= 9)
-					bIsCostZero = true;				
-				pLog->printLog("(%s) (%s)\n %s的CostClose为%f\n", g_AccountInfo.AccountName.c_str(), filepre_tm, key.ID.c_str(), Display[g_AccountInfo.AccountName].position1[key].CostClose);
+				{
+					bIsCostZero = true;
+					pLog->printLog("(%s) (%s)\n %s的CostClose为%f\n", g_AccountInfo.AccountName.c_str(), filepre_tm, key.ID.c_str(), Display[g_AccountInfo.AccountName].position1[key].CostClose);
+				}
 			}
 			else
 				Display[g_AccountInfo.AccountName].position1[key].HoldingPnlClose = (Display[g_AccountInfo.AccountName].position1[key].LastPrice - Display[g_AccountInfo.AccountName].position1[key].CostClose)*Display[g_AccountInfo.AccountName].position1[key].Multiplie*Display[g_AccountInfo.AccountName].position1[key].NumPosition;
@@ -198,9 +200,14 @@ void CFTMD::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketDat
 				Display[g_AccountInfo.AccountName].position1[key].HoldingPnlClose = 0;
 				nowtime = time(NULL); //获取日历时间
 				localtime_s(&local, &nowtime);  //获取当前系统时间
+				char filepre_tm[18];
+				strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
 				if (local.tm_hour <= 15 && local.tm_hour >= 9)
-					bIsCostZero = true;
 
+				{
+					bIsCostZero = true;
+					pLog->printLog("(%s) (%s)\n %s的CostClose为%f\n", g_AccountInfo.AccountName.c_str(), filepre_tm, key.ID.c_str(), Display[g_AccountInfo.AccountName].position1[key].CostClose);
+				}
 			}
 			else
 				Display[g_AccountInfo.AccountName].position1[key].HoldingPnlClose = (Display[g_AccountInfo.AccountName].position1[key].LastPrice - Display[g_AccountInfo.AccountName].position1[key].CostClose)*Display[g_AccountInfo.AccountName].position1[key].Multiplie*Display[g_AccountInfo.AccountName].position1[key].NumPosition;
