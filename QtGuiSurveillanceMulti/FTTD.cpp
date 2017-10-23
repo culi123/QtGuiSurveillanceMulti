@@ -158,7 +158,7 @@ void CFTTD::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorP
 	{
 		//忽略组合合约
 		string code = pInvestorPosition->InstrumentID;
-		if (code.find("SPC") == code.npos)
+		if ((code.find("SPC") == code.npos)&& (code.find("SP") == code.npos))
 		{
 			CThostFtdcInvestorPositionField position_temp;
 			position_temp = *pInvestorPosition;
