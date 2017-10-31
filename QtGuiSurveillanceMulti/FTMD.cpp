@@ -272,15 +272,23 @@ double CFTMD::GetLastPrice(string order)
 }
 int CFTMD::GetMultiple(string code)
 {
-	for (list<CThostFtdcInstrumentField>::iterator it = g_pTdHandler->Instruments.begin(); it != g_pTdHandler->Instruments.end(); it++)
+	if (g_pTdHandler->Instruments.size()>0)
 	{
-		if (strcmp(it->InstrumentID, code.c_str())==0)
+		//TD端已经获取到合约信息，则查找该合约的乘数。
+		for (list<CThostFtdcInstrumentField>::iterator it = g_pTdHandler->Instruments.begin(); it != g_pTdHandler->Instruments.end(); it++)
 		{
-			int multi = it->VolumeMultiple;
-			return multi;
+			if (strcmp(it->InstrumentID, code.c_str())==0)
+			{
+				int multi = it->VolumeMultiple;
+				return multi;
+			}
 		}
 	}
-	bIsMultiZero = true;
+	else
+	{
+		//TD端未获取到合约信息，则记录
+		bIsMultiZero = true;
+	}
 
 	nowtime = time(NULL); //获取日历时间
 	localtime_s(&local, &nowtime);  //获取当前系统时间
@@ -288,6 +296,7 @@ int CFTMD::GetMultiple(string code)
 	strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
 	pLog->printLog("(%s) (%s)\n %s获取Multi失败，此时list<CThostFtdcInstrumentField>长度为%d \n", g_AccountInfo.AccountName.c_str(), filepre_tm, code.c_str(), g_pTdHandler->Instruments.size());
 	return 0;
+	
 }
 double CFTMD::GetTClose(string code)
 {
