@@ -91,7 +91,7 @@ void CFTMD::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtd
 		Display[g_AccountInfo.AccountName].log.push_back(string(filepre_tm) + string(":Market front landing error!!!"));
 		pLog->printLog("(%s) (%s)\n 行情前端登陆错误 ErrorID=%d ErrorMsg=%s 当前日期=%s \n", g_AccountInfo.AccountName.c_str(), filepre_tm, pRspInfo->ErrorID, pRspInfo->ErrorMsg, pRspUserLogin->TradingDay);
 
-		printf("***%s*** 行情前端登陆错误 ErrorID=%d ErrorMsg=%s 当前日期=%s\n", g_pTdHandler->g_AccountInfo.AccountName.c_str(), pRspInfo->ErrorID, pRspInfo->ErrorMsg, pRspUserLogin->TradingDay);
+		//printf("***%s*** 行情前端登陆错误 ErrorID=%d ErrorMsg=%s 当前日期=%s\n", g_pTdHandler->g_AccountInfo.AccountName.c_str(), pRspInfo->ErrorID, pRspInfo->ErrorMsg, pRspUserLogin->TradingDay);
 	}
 }
 
