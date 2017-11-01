@@ -110,12 +110,14 @@ void CFTTD::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtd
 	}
 	else
 	{
-		printf("***%s*** 交易前端登陆错误 ErrorID=%d ErrorMsg=%s 当前日期=%s\n", g_AccountInfo.AccountName.c_str(), pRspInfo->ErrorID, pRspInfo->ErrorMsg, pRspUserLogin->TradingDay);
+		
 		nowtime = time(NULL); //获取日历时间
 		localtime_s(&local, &nowtime);  //获取当前系统时间
 		char filepre_tm[18];
 		strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
+		pLog->printLog("(%s) (%s)\n 交易前端登陆错误 ErrorID=%d ErrorMsg=%s 当前日期=%s \n", g_AccountInfo.AccountName.c_str(), filepre_tm, pRspInfo->ErrorID, pRspInfo->ErrorMsg, pRspUserLogin->TradingDay);
 		Display[g_AccountInfo.AccountName].log.push_back(string(filepre_tm) + string(":Transaction front landing error !!!"));
+		printf("***%s*** 交易前端登陆错误 ErrorID=%d ErrorMsg=%s 当前日期=%s\n", g_AccountInfo.AccountName.c_str(), pRspInfo->ErrorID, pRspInfo->ErrorMsg, pRspUserLogin->TradingDay);
 	}
 }
 void CFTTD::GetInstruments()
