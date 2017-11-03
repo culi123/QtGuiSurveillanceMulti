@@ -16,6 +16,7 @@ public:
 	bool bIsNon = false;
 	bool bIsCostZero;
 	bool bIsMultiZero;
+	bool bIsLandError=false;
 	HANDLE hEvent,hEventUi;
 	std::list<CThostFtdcInstrumentField> Instruments;
 	std::list<CThostFtdcInvestorPositionField> CurrentPosition;

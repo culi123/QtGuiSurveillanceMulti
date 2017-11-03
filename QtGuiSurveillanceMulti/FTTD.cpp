@@ -107,6 +107,7 @@ void CFTTD::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtd
 		strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
 		Display[g_AccountInfo.AccountName].log.push_back(string(filepre_tm) + string(":Transaction front landed successfully!!!"));
 		GetInstruments();
+		bIsLandError = false;
 	}
 	else
 	{
@@ -117,6 +118,7 @@ void CFTTD::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtd
 		strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
 		pLog->printLog("(%s) (%s)\n 交易前端登陆错误 ErrorID=%d ErrorMsg=%s 当前日期=%s \n", g_AccountInfo.AccountName.c_str(), filepre_tm, pRspInfo->ErrorID, pRspInfo->ErrorMsg, pRspUserLogin->TradingDay);
 		Display[g_AccountInfo.AccountName].log.push_back(string(filepre_tm) + string(":Transaction front landing error !!!"));
+		bIsLandError = true;
 		//printf("***%s*** 交易前端登陆错误 ErrorID=%d ErrorMsg=%s 当前日期=%s\n", g_AccountInfo.AccountName.c_str(), pRspInfo->ErrorID, pRspInfo->ErrorMsg, pRspUserLogin->TradingDay);
 	}
 }
@@ -512,6 +514,33 @@ void CFTTD::Run()
 		char filepre_tm[18];
 		strftime(filepre_tm, 18, "%H:%M:%S", &local);
 
+
+		if (bIsLandError && local.tm_hour >= 9)
+		{
+			pLog->printLog("(%s) (%s)\n 触发重新登录，\n", g_AccountInfo.AccountName.c_str(), filepre_tm);
+			//针对交易前端在夜盘结束后白盘开始前可能会出现的登录失败，进行重新登录
+			for (list<string>::iterator it = g_AccountInfo.TdAddress.begin(); it != g_AccountInfo.TdAddress.end(); it++)
+			{
+				strcpy_s(qh_TDAddress, (*it).c_str());
+				m_pTdApi->RegisterFront(qh_TDAddress);
+			}
+
+			// 使客户端开始与后台服务建立连接
+			ResetEvent(hEvent);
+			ResetEvent(hEventUi);
+			m_pTdApi->Init();
+			if (WaitForSingleObject(hEvent, 30000) == WAIT_TIMEOUT)
+			{
+				nowtime = time(NULL); //获取日历时间
+				localtime_s(&local, &nowtime);  //获取当前系统时间
+				char filepre_tm[18];
+				strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
+				Display[g_AccountInfo.AccountName].log.push_back(string(filepre_tm) + string(":Transaction front landed failed !!!"));
+				pLog->printLog("(%s) (%s)\n 重新登录超时，\n", g_AccountInfo.AccountName.c_str(), filepre_tm);
+			}
+
+			ConfirmSettleInfo();
+		}
 		bIsNon = Display[g_AccountInfo.AccountName].bIsEmpty;
 		bIsCostZero = ((CFTMD*)g_pMdHandler)->bIsCostZero;
 		bIsMultiZero = ((CFTMD*)g_pMdHandler)->bIsMultiZero;
