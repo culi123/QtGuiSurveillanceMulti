@@ -266,6 +266,20 @@ void QtGuiSurveillanceMulti::Init()
 	InitMonitorPage();
 	//UI界面中各个账户页面框架内部内容的初始化
 	InitAccountPages();
+
+	//设定监控页或者账号页面的画图参数
+	//sizeofplot = 60 * 5.5;//夜盘画图X轴参数，夜盘交易时间为21:00:00-第二天02：30:00，共5.5个小时
+	//QDateTime start = QDateTime(QDate(2017, 9, 19), QTime(21, 00, 00));//夜盘从每天的晚上21:00:00开始
+	//start_time = QTime(21, 00, 00);
+	//start.setTimeSpec(Qt::UTC);
+	//startTime = start.toTime_t();
+
+
+	sizeofplot = 60 * 6;//白天画图X轴参数，白天交易时间为09:00:00-第二天15：00:00，共6个小时
+	QDateTime start = QDateTime(QDate(2017, 9, 19), QTime(9, 00, 00));//夜盘从每天的晚上21:00:00开始
+	start_time = QTime(9, 00, 00);
+	start.setTimeSpec(Qt::UTC);
+	startTime = start.toTime_t();
 }
 void QtGuiSurveillanceMulti::InitMonitorPage()
 {
@@ -318,6 +332,7 @@ void QtGuiSurveillanceMulti::InitMonitorPage()
 	timeTicker->setDateTimeSpec(Qt::UTC);
 	timeTicker->setDateTimeFormat("hh:mm:ss");
 	MonitorPageTotalPnLPlot->xAxis->setTicker(timeTicker);
+
 
 	//分类实时盈亏柱状图
 	//设定X轴坐标为文字刻度
@@ -833,10 +848,7 @@ void QtGuiSurveillanceMulti::timerEvent(QTimerEvent * event)
 		//获取当前时间变量
 		QTime now = QTime::currentTime();
 		now_min = QTime(now.hour(), now.minute(), 0, 0);
-		QDateTime start = QDateTime(QDate(2017, 9, 19), QTime(21, 00, 00));
-		start_time = QTime(21, 00, 00);
-		start.setTimeSpec(Qt::UTC);
-		startTime = start.toTime_t();
+		
 
 		//更新统计信息
 		CalculateSummary();
@@ -963,17 +975,17 @@ void QtGuiSurveillanceMulti::UpdateMonitorPage()
 void QtGuiSurveillanceMulti::UpdateMonitorPageTotalPnLPlot()
 {
 	//总盈亏折线图更新
-
-	QVector<double> xx(1081), yy(1081);
-	QVector<QTime>zz(1081);
-	for (int i = 0; i < 1080; ++i)
+	
+	QVector<double> xx(sizeofplot+1), yy(sizeofplot+1);
+	QVector<QTime>zz(sizeofplot+1);
+	for (int i = 0; i < sizeofplot; ++i)
 	{
 		xx[i] = startTime + i * 60;
 		zz[i] = start_time.addSecs(i * 60);
 	}
 	double max_yy = 0;
 	double min_yy = 0;
-	for (int i = 0; i < 1080; ++i)
+	for (int i = 0; i < sizeofplot; ++i)
 	{
 
 		yy[i] = plotdata[zz[i]];
@@ -983,7 +995,7 @@ void QtGuiSurveillanceMulti::UpdateMonitorPageTotalPnLPlot()
 			min_yy = yy[i];
 	}
 	MonitorPageTotalPnLPlot->graph(0)->setData(xx, yy);
-	MonitorPageTotalPnLPlot->xAxis->setRange(xx[0], xx[1079]);
+	MonitorPageTotalPnLPlot->xAxis->setRange(xx[0], xx[sizeofplot-1]);
 	MonitorPageTotalPnLPlot->yAxis->setRange(min_yy, max_yy);
 	MonitorPageTotalPnLPlot->xAxis->setTickLabelColor(Qt::white);
 	MonitorPageTotalPnLPlot->xAxis->setLabelColor(Qt::white);
@@ -1291,16 +1303,16 @@ void QtGuiSurveillanceMulti::UpdateAccountPages()
 
 			///各个账户内画图
 
-			QVector<double> x(1081), y(1081);
-			QVector<QTime>z(1081);
-			for (int i = 0; i < 1080; ++i)
+			QVector<double> x(sizeofplot+1), y(sizeofplot+1);
+			QVector<QTime>z(sizeofplot+1);
+			for (int i = 0; i < sizeofplot; ++i)
 			{
 				x[i] = startTime + i * 60;
 				z[i] = start_time.addSecs(i * 60);
 			}
 			double max_y = 0;
 			double min_y = 0;
-			for (int i = 0; i < 1080; ++i)
+			for (int i = 0; i < sizeofplot; ++i)
 			{
 
 				y[i] = Display[*its].plotdata[z[i]];
@@ -1310,7 +1322,7 @@ void QtGuiSurveillanceMulti::UpdateAccountPages()
 					min_y = y[i];
 			}
 			P_AccountPlot[k]->graph(0)->setData(x, y);
-			P_AccountPlot[k]->xAxis->setRange(x[0], x[1079]);
+			P_AccountPlot[k]->xAxis->setRange(x[0], x[sizeofplot-1]);
 			P_AccountPlot[k]->yAxis->setRange(min_y, max_y);
 			P_AccountPlot[k]->xAxis->setTickLabelColor(Qt::white);
 			P_AccountPlot[k]->xAxis->setLabelColor(Qt::white);

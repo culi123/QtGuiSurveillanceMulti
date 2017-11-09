@@ -42,7 +42,7 @@ public:
 	QHBoxLayout *AccountTabHorizontalLayout,**P_AccountTabHorizontalLayout;
 	//账号信息
 	list<string> accounts;
-	int n, num_accounts;
+	int n, num_accounts, sizeofplot;
 	//时间变量
 	double  startTime;
 	QTime now_min,start_time;
