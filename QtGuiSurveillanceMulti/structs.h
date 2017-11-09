@@ -117,6 +117,6 @@ struct Display_GUI
 	Display_Account account;
 	std::list<std::string> log;									//CTP运行日志		
 	std::map<QTime, double>plotdata;
-	bool hEventUi;	
-	bool bIsEmpty;												//判断汇总页是不是全是0
+	bool hEventUi=false;	
+	bool bIsEmpty=false;												//判断汇总页是不是全是0
 };

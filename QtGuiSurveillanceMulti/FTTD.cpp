@@ -57,12 +57,13 @@ void CFTTD::Init(AccountInfo account_info, void * pMdHandler)
 	m_pTdApi->Init();
 	if (WaitForSingleObject(hEvent, 30000) == WAIT_TIMEOUT)
 	{
-		cout << "***" + g_AccountInfo.AccountName + "***" << "交易前端登陆失败 该线程已退出" << endl;
+		//cout << "***" + g_AccountInfo.AccountName + "***" << "交易前端登陆失败 该线程已退出" << endl;
 		nowtime = time(NULL); //获取日历时间
 		localtime_s(&local, &nowtime);  //获取当前系统时间
 		char filepre_tm[18];
 		strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
 		Display[g_AccountInfo.AccountName].log.push_back(string(filepre_tm) + string(":Transaction front landed failed !!!"));
+		pLog->printLog("(%s) (%s)\n 交易前端登录超时。 \n", g_AccountInfo.AccountName.c_str(), filepre_tm);
 	}
 
 	ConfirmSettleInfo();
@@ -76,6 +77,7 @@ void CFTTD::OnFrontConnected()
 	char filepre_tm[18];
 	strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
 	Display[g_AccountInfo.AccountName].log.push_back(string(filepre_tm) + string(":Transaction front connected successfully !!!"));
+	pLog->printLog("(%s) (%s)\n 交易前端连接成功 \n", g_AccountInfo.AccountName.c_str(), filepre_tm);
 	if (bWannaLogin)
 	{
 		CThostFtdcReqUserLoginField reqUserLogin;
@@ -93,6 +95,8 @@ void CFTTD::OnFrontDisconnected (int nReason)
 	char filepre_tm[18];
 	strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
 	Display[g_AccountInfo.AccountName].log.push_back(string(filepre_tm) + string(":Transaction front connection is broken !!!"));
+	pLog->printLog("(%s) (%s)\n 交易前端连接断开。 \n", g_AccountInfo.AccountName.c_str(), filepre_tm);
+
 	WaitForSingleObject(hMutex, INFINITE);
 	ReleaseMutex(hMutex);
 }
@@ -106,6 +110,7 @@ void CFTTD::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtd
 		char filepre_tm[18];
 		strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
 		Display[g_AccountInfo.AccountName].log.push_back(string(filepre_tm) + string(":Transaction front landed successfully!!!"));
+		pLog->printLog("(%s) (%s)\n 交易前端登录成功。 \n", g_AccountInfo.AccountName.c_str(), filepre_tm);
 		GetInstruments();
 		bIsLandError = false;
 	}
@@ -125,7 +130,7 @@ void CFTTD::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtd
 void CFTTD::GetInstruments()
 {
     //获得合约列表
-	Instruments.clear();
+	//Instruments.clear();
 	CThostFtdcQryInstrumentField qryField;
     memset(&qryField, 0, sizeof(qryField));
 	Sleep(1000);
@@ -144,13 +149,34 @@ void CFTTD::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtd
 		CThostFtdcInstrumentField InstFld;
 		memset(&InstFld, 0, sizeof(InstFld));
 		memcpy(&InstFld, pInstrument, sizeof(InstFld));
-		CFTTD::Instruments.push_back(InstFld);
+		CFTTD::Instruments.push_back(InstFld);//插入
+		//if (Instruments.empty())
+		//	CFTTD::Instruments.push_back(InstFld);//插入
+		//else
+		//{
+		//	for (list<CThostFtdcInstrumentField>::iterator it = Instruments.begin(); it != Instruments.end(); it++)
+		//	{
+		//		if (strcmp(it->InstrumentID, InstFld.InstrumentID) == 0)
+		//			continue;
+		//		else
+		//			CFTTD::Instruments.push_back(InstFld);//插入
+		//	}
+		//}
+			
+		
+		
+		
 		//g_pLog->printLog("名称：%s,交易所代码：%s \n", InstFld.InstrumentID, InstFld.ExchangeID);
 	}
 	if (bIsLast)
 	{
 		bIsgetInst = true;
-		cout << "***" + g_AccountInfo.AccountName + "***" << "交易前端登陆成功" << endl;
+		nowtime = time(NULL); //获取日历时间
+		localtime_s(&local, &nowtime);  //获取当前系统时间
+		char filepre_tm[18];
+		strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
+		//cout << "***" + g_AccountInfo.AccountName + "***" << "交易前端登陆成功" << endl;
+		pLog->printLog("(%s) (%s)\n 合约订阅完毕。 \n", g_AccountInfo.AccountName.c_str(), filepre_tm);
 		SetEvent(hEvent);
 		
 	}
@@ -514,10 +540,10 @@ void CFTTD::Run()
 		char filepre_tm[18];
 		strftime(filepre_tm, 18, "%H:%M:%S", &local);
 
-
-		if (bIsLandError && local.tm_hour >= 9)
+		bIsMultiZero = ((CFTMD*)g_pMdHandler)->bIsMultiZero;
+		if ((bIsLandError && local.tm_hour >= 9)|| (bIsMultiZero && local.tm_hour >= 9))
 		{
-			pLog->printLog("(%s) (%s)\n 触发重新登录，\n", g_AccountInfo.AccountName.c_str(), filepre_tm);
+			pLog->printLog("(%s) (%s)\n 触发重新登录，bIsLandError=%d,bIsMultiZero=%d\n", g_AccountInfo.AccountName.c_str(), filepre_tm, bIsLandError, bIsMultiZero);
 			//针对交易前端在夜盘结束后白盘开始前可能会出现的登录失败，进行重新登录
 			for (list<string>::iterator it = g_AccountInfo.TdAddress.begin(); it != g_AccountInfo.TdAddress.end(); it++)
 			{
@@ -536,14 +562,14 @@ void CFTTD::Run()
 				char filepre_tm[18];
 				strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
 				Display[g_AccountInfo.AccountName].log.push_back(string(filepre_tm) + string(":Transaction front landed failed !!!"));
-				pLog->printLog("(%s) (%s)\n 重新登录超时，\n", g_AccountInfo.AccountName.c_str(), filepre_tm);
+				pLog->printLog("(%s) (%s)\n 重新登录超时\n", g_AccountInfo.AccountName.c_str(), filepre_tm);
 			}
 
 			ConfirmSettleInfo();
 		}
 		bIsNon = Display[g_AccountInfo.AccountName].bIsEmpty;
 		bIsCostZero = ((CFTMD*)g_pMdHandler)->bIsCostZero;
-		bIsMultiZero = ((CFTMD*)g_pMdHandler)->bIsMultiZero;
+
 		if (bIsTrade || bIsNon ||bIsCostZero || bIsMultiZero || (strcmp(filepre_tm, "09:29:00") == 0))
 		{
 			pLog->printLog("(%s) (%s)\n 程序触发获取持仓，bIsTrade=%d;bIsNon=%d;bIsCostZero=%d;bIsMultiZero=%d;\n", g_AccountInfo.AccountName.c_str(), filepre_tm, bIsTrade, bIsNon, bIsCostZero, bIsMultiZero);
@@ -588,6 +614,7 @@ string CFTTD::GetTradeCode(string code_raw)
 	string tail_3 = tail_4.substr(1);
 
 	list<string> InstrumentCodes;
+	
 	for (list<CThostFtdcInstrumentField>::iterator it = Instruments.begin(); it != Instruments.end(); it++)
 	{
 		string code = it->InstrumentID;
@@ -667,12 +694,22 @@ void CFTTD::ConfirmSettleInfo()
 	m_pTdApi->ReqSettlementInfoConfirm(pSettleInfoConfirm, 1);
 	if (WaitForSingleObject(hEvent, 10000) == WAIT_OBJECT_0)
 	{
-		printf("***%s*** 确认结算结果完毕\n",g_AccountInfo.AccountName.c_str());
+		//printf("***%s*** 确认结算结果完毕\n",g_AccountInfo.AccountName.c_str());
+		nowtime = time(NULL); 
+		localtime_s(&local, &nowtime);
+		char filepre_tm[18];
+		strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
+		pLog->printLog("(%s) (%s)\n 确认结算结果完毕。\n", g_AccountInfo.AccountName.c_str(), filepre_tm);
 	}
 	else
 	{
-		printf("***%s*** 确认结算结果失败 该线程已退出\n",g_AccountInfo.AccountName.c_str());
-		ExitThread(0);
+		//printf("***%s*** 确认结算结果失败 该线程已退出\n",g_AccountInfo.AccountName.c_str());
+		//ExitThread(0);
+		nowtime = time(NULL);
+		localtime_s(&local, &nowtime);
+		char filepre_tm[18];
+		strftime(filepre_tm, 18, "%Y%m%d_%H%M%S", &local);
+		pLog->printLog("(%s) (%s)\n 确认结算结果失败。\n", g_AccountInfo.AccountName.c_str(), filepre_tm);
 	}
 }
 
@@ -694,7 +731,7 @@ void CFTTD::AccountLogout()
 	{
 		
 		printf("***%s*** 交易前端登出失败 该线程已退出\n", g_AccountInfo.AccountName.c_str());
-		ExitThread(0);
+		//ExitThread(0);
 	}
 	else
 	{
