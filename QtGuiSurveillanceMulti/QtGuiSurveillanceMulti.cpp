@@ -268,18 +268,18 @@ void QtGuiSurveillanceMulti::Init()
 	InitAccountPages();
 
 	//设定监控页或者账号页面的画图参数
-	//sizeofplot = 60 * 5.5;//夜盘画图X轴参数，夜盘交易时间为21:00:00-第二天02：30:00，共5.5个小时
-	//QDateTime start = QDateTime(QDate(2017, 9, 19), QTime(21, 00, 00));//夜盘从每天的晚上21:00:00开始
-	//start_time = QTime(21, 00, 00);
-	//start.setTimeSpec(Qt::UTC);
-	//startTime = start.toTime_t();
-
-
-	sizeofplot = 60 * 6;//白天画图X轴参数，白天交易时间为09:00:00-第二天15：00:00，共6个小时
-	QDateTime start = QDateTime(QDate(2017, 9, 19), QTime(9, 00, 00));//夜盘从每天的晚上21:00:00开始
-	start_time = QTime(9, 00, 00);
+	sizeofplot = 60 * 5.5;//夜盘画图X轴参数，夜盘交易时间为21:00:00-第二天02：30:00，共5.5个小时
+	QDateTime start = QDateTime(QDate(2017, 9, 19), QTime(21, 00, 00));//夜盘从每天的晚上21:00:00开始
+	start_time = QTime(21, 00, 00);
 	start.setTimeSpec(Qt::UTC);
 	startTime = start.toTime_t();
+
+
+	//sizeofplot = 60 * 6;//白天画图X轴参数，白天交易时间为09:00:00-第二天15：00:00，共6个小时
+	//QDateTime start = QDateTime(QDate(2017, 9, 19), QTime(9, 00, 00));//夜盘从每天的晚上21:00:00开始
+	//start_time = QTime(9, 00, 00);
+	//start.setTimeSpec(Qt::UTC);
+	//startTime = start.toTime_t();
 }
 void QtGuiSurveillanceMulti::InitMonitorPage()
 {
@@ -858,7 +858,9 @@ void QtGuiSurveillanceMulti::timerEvent(QTimerEvent * event)
 		//更新各个账户信息
 		UpdateAccountPages();
 		
-
+		//定时关闭程序，避免登录失败造成未知crash
+		if (now.hour() == 2 && now.minute() == 40)
+			this->close();//定时关闭程序
 	 }
 }
 void QtGuiSurveillanceMulti::UpdateMonitorPage() 
