@@ -6,3 +6,4 @@
 主监控界面
 分账户监控界面
 
+![Alt text](https://github.com/culi123/QtGuiSurveillanceMulti/raw/master/Screenshots/主监控页.png)
